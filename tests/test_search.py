@@ -1,24 +1,25 @@
 def test_search_returns_results(client):
     response = client.post(
         "/rag/search",
-        json={"query": "kawalerka Białołęka", "top_k": 3},
+        content="kawalerka Białołęka",
+        headers={"Content-Type": "text/plain"},
+        params={"top_k": 3},
     )
     assert response.status_code == 200
     payload = response.json()
     assert payload["query"] == "kawalerka Białołęka"
     assert len(payload["results"]) > 0
     assert any("Białołęka" in (hit.get("district") or "") for hit in payload["results"])
+    assert "transcription" in payload["results"][0]
+    assert len(payload["results"][0]["transcription"]) > 0
 
 
 def test_search_with_filters(client):
     response = client.post(
         "/rag/search",
-        json={
-            "query": "mieszkanie z balkonem",
-            "top_k": 5,
-            "rooms": 2,
-            "price_max": 900000,
-        },
+        content="mieszkanie z balkonem",
+        headers={"Content-Type": "text/plain"},
+        params={"top_k": 5, "rooms": 2, "price_max": 900000},
     )
     assert response.status_code == 200
     payload = response.json()

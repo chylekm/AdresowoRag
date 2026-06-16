@@ -30,7 +30,7 @@ class SearchFilters(BaseModel):
         return self
 
 
-class SearchFilters(BaseModel):
+class SearchHit(BaseModel):
     id: int
     score: float
     district: str | None = None

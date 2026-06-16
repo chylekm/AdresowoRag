@@ -18,12 +18,15 @@ def test_answer_with_mocked_llm(client, monkeypatch):
 
     response = client.post(
         "/rag/answer",
-        json={"query": "jakie kawalerki są na Białołęce?", "top_k": 3},
+        content="jakie kawalerki są na Białołęce?",
+        headers={"Content-Type": "text/plain"},
+        params={"top_k": 3},
     )
     assert response.status_code == 200
     payload = response.json()
     assert isinstance(payload["answer"], str)
     assert len(payload["answer"]) > 0
     assert len(payload["sources"]) > 0
+    assert "transcription" in payload["sources"][0]
     assert payload["model"] == "test-model"
     assert payload["usage"]["prompt_tokens"] == 100

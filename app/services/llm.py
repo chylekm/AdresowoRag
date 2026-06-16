@@ -70,5 +70,14 @@ class LLMService:
                 if attempt < max_retries - 1:
                     time.sleep(2**attempt)
                     continue
-                raise
+                if isinstance(exc, APIStatusError):
+                    detail = exc.message
+                    try:
+                        body = exc.body
+                        if isinstance(body, dict):
+                            detail = body.get("error", {}).get("message", detail)
+                    except Exception:
+                        pass
+                    raise RuntimeError(f"OpenRouter API error ({exc.status_code}): {detail}") from exc
+                raise RuntimeError(f"OpenRouter connection error: {exc}") from exc
         raise RuntimeError(f"Błąd generowania odpowiedzi: {last_error}")

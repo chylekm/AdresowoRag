@@ -21,7 +21,7 @@ flowchart LR
 - **FastAPI** + **Pydantic v2** — REST API i walidacja
 - **sentence-transformers** (`intfloat/multilingual-e5-small`) — lokalne embeddingi po polsku
 - **FAISS** — baza wektorowa z persystencją na dysku
-- **OpenRouter** — generowanie odpowiedzi w `/rag/answer` (kompatybilny z OpenAI SDK)
+- **OpenRouter** — generowanie odpowiedzi w `/rag/answer` (model `google/gemma-4-31b-it:free`)
 - **Docker** — konteneryzacja aplikacji
 
 ## Wymagania
@@ -40,8 +40,11 @@ cp .env.example .env
 | Zmienna | Opis | Domyślnie |
 |---------|------|-----------|
 | `OPENROUTER_API_KEY` | Klucz API OpenRouter | — |
-| `OPENROUTER_MODEL` | Model LLM | `openai/gpt-4o-mini` |
+| `OPENROUTER_MODEL` | Model LLM | `google/gemma-4-31b-it:free` (darmowy) |
 | `OPENROUTER_BASE_URL` | URL API | `https://openrouter.ai/api/v1` |
+
+Domyślny model `google/gemma-4-31b-it:free` jest bezpłatny na OpenRouter. Płatne modele (np. `openai/gpt-4o-mini`) wymagają kredytów na [openrouter.ai/settings/credits](https://openrouter.ai/settings/credits).
+
 | `EMBED_MODEL` | Model embeddingów | `intfloat/multilingual-e5-small` |
 | `DATA_PATH` | Ścieżka do CSV | `data/ogloszenia_warszawa_detailed.csv` |
 | `INDEX_DIR` | Katalog indeksu FAISS | `index` |
@@ -83,7 +86,7 @@ Budowa trwa kilka minut (instalacja PyTorch CPU + zależności). Nie używaj `do
 ```bash
 docker run --rm -p 8000:8000 \
   -e OPENROUTER_API_KEY=sk-or-v1-twoj-klucz \
-  -e OPENROUTER_MODEL=openai/gpt-4o-mini \
+  -e OPENROUTER_MODEL=google/gemma-4-31b-it:free \
   -v "$(pwd)/index:/app/index" \
   adresowo-rag
 ```
@@ -102,31 +105,22 @@ curl http://localhost:8000/health
 
 ### `POST /rag/search`
 
-Wyszukiwanie semantyczne wśród ogłoszeń.
+Wyszukiwanie semantyczne wśród ogłoszeń. **Zapytanie przesyłane jest jako zwykły tekst** (`Content-Type: text/plain`), a API zwraca najbardziej podobne transkrypcje.
 
 ```bash
-curl -X POST http://localhost:8000/rag/search \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "dwupokojowe na Mokotowie do 800 tysięcy",
-    "top_k": 5,
-    "district": "Mokotów",
-    "price_max": 800000
-  }'
+curl -X POST "http://localhost:8000/rag/search?top_k=5&district=Mokotów&price_max=800000" \
+  -H "Content-Type: text/plain" \
+  -d 'dwupokojowe na Mokotowie do 800 tysięcy'
 ```
 
 ### `POST /rag/answer`
 
-Pytanie do bazy ogłoszeń z odpowiedzią generowaną przez LLM.
+Pytanie do bazy ogłoszeń z odpowiedzią generowaną przez LLM. **Pytanie przesyłane jest jako zwykły tekst** (`Content-Type: text/plain`).
 
 ```bash
-curl -X POST http://localhost:8000/rag/answer \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "jakie mieszkania blisko metra mają balkon?",
-    "top_k": 5,
-    "temperature": 0.2
-  }'
+curl -X POST "http://localhost:8000/rag/answer?top_k=5&temperature=0.2" \
+  -H "Content-Type: text/plain" \
+  -d 'jakie mieszkania blisko metra mają balkon?'
 ```
 
 ### `POST /admin/reindex`

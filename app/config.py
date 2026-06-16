@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     openrouter_api_key: str | None = Field(default=None, alias="OPENROUTER_API_KEY")
     openrouter_model: str = Field(
-        default="openai/gpt-4o-mini",
+        default="google/gemma-4-31b-it:free",
         alias="OPENROUTER_MODEL",
     )
     openrouter_base_url: str = Field(

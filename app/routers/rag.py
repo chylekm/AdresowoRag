@@ -118,9 +118,9 @@ def rag_answer(
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except RuntimeError as exc:
-        message = str(exc)
-        if "OpenRouter" in message:
-            raise HTTPException(status_code=502, detail=message) from exc
-        raise HTTPException(status_code=500, detail=message) from exc
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=502, detail="Błąd generowania odpowiedzi przez LLM") from exc
+        raise HTTPException(
+            status_code=502,
+            detail=f"Błąd generowania odpowiedzi przez LLM: {exc}",
+        ) from exc
